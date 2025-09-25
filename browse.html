@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Local WorkHub — Browse Jobs</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="logo">Local WorkHub</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="browse.html">Browse Jobs</a>
+        <a href="post.html">Post a Job</a>
+        <a href="accepted.html">My Accepted Jobs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2>Browse Jobs</h2>
+
+    <div class="controls">
+      <input id="searchInput" placeholder="Search title, desc, location..." />
+      <select id="categoryFilter">
+        <option value="">All categories</option>
+      </select>
+    </div>
+
+    <div id="jobsList" class="job-list"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">Local WorkHub — front-end prototype</div>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

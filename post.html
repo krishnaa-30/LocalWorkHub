@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Local WorkHub — Post a Job</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1 class="logo">Local WorkHub</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="browse.html">Browse Jobs</a>
+        <a href="post.html">Post a Job</a>
+        <a href="accepted.html">My Accepted Jobs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2>Post a Job</h2>
+
+    <form id="postForm" class="card">
+      <label>Title
+        <input name="title" required />
+      </label>
+
+      <label>Category
+        <input name="category" placeholder="e.g., Cleaning, Tutoring, Delivery" />
+      </label>
+
+      <label>Pay (₹)
+        <input name="pay" type="number" min="0" />
+      </label>
+
+      <label>Location
+        <input name="location" placeholder="Neighborhood or area" />
+      </label>
+
+      <label>Description
+        <textarea name="description" rows="4"></textarea>
+      </label>
+
+      <label>Contact (email or phone)
+        <input name="contact" />
+      </label>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Post Job</button>
+        <a class="btn btn-outline" href="browse.html">Cancel</a>
+      </div>
+    </form>
+
+    <div id="postMessage" class="muted"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">Local WorkHub — front-end prototype</div>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
