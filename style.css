@@ -215,3 +215,35 @@ input:focus, textarea:focus{
   .job-actions .btn{ padding:8px 10px; }
   .container{ padding:14px }
 }
+/* === Category Chips === */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.chip {
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.05);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chip:hover {
+  background: rgba(139,92,246,0.1);
+  color: var(--accent-2);
+  transform: translateY(-2px);
+}
+
+.chip.active {
+  background: linear-gradient(90deg, var(--accent), #6d28d9);
+  color: white;
+  box-shadow: 0 3px 18px rgba(139,92,246,0.25);
+  border: none;
+}

@@ -1,4 +1,5 @@
-// app.js - shared by all pages (updated: dark-mode + delete/unaccept)
+// app.js — FINAL VERSION
+// Dark mode + category chips + login/signup protection + delete/unaccept
 (function(){
   const LS_KEY = 'localworkhub_jobs_v1';
   const LS_ACCEPTED_KEY = 'localworkhub_accepted_v1';
@@ -47,9 +48,8 @@
 
   function formatDate(ts){ return new Date(ts).toLocaleString(); }
 
-  // Utility to create job card element (used on browse and accepted pages)
+  // === Job card template ===
   function createJobCard(job, opts = {}) {
-    // opts: { onAccept, showAcceptBtn (bool), showContactLink (bool), showDelete (bool), onDelete }
     const wrap = document.createElement('div');
     wrap.className = 'job-card';
 
@@ -77,7 +77,6 @@
       mail.href = `mailto:${job.contact}`;
       mail.textContent = 'Contact';
       mail.className = 'btn btn-contact';
-      mail.style.padding = '6px 8px';
       right.appendChild(mail);
     }
 
@@ -91,7 +90,6 @@
       right.appendChild(btn);
     }
 
-    // Delete button (when allowed)
     if (opts.showDelete) {
       const del = document.createElement('button');
       del.textContent = 'Delete';
@@ -107,21 +105,52 @@
     return wrap;
   }
 
-  // Page-specific wiring
+  // === MAIN PAGE LOGIC ===
   document.addEventListener('DOMContentLoaded', function(){
     const path = window.location.pathname.split('/').pop() || 'index.html';
 
-    // mark active nav link (if exists)
+    // === LOGIN / SIGNUP PROTECTION ===
+    const loggedIn = localStorage.getItem('LocalWorkHub_loggedIn');
+    const publicPages = ['login.html', 'signup.html', 'index.html'];
+
+    // redirect to login if not logged in
+    if (!loggedIn && !publicPages.includes(path)) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // add logout if logged in
+    if (loggedIn) {
+      const nav = document.querySelector('.site-header nav');
+      if (nav) {
+        const userLabel = document.createElement('span');
+        userLabel.textContent = `Welcome, ${loggedIn}`;
+        userLabel.style.color = 'var(--muted)';
+        userLabel.style.marginRight = '10px';
+
+        const logout = document.createElement('a');
+        logout.textContent = 'Logout';
+        logout.href = '#';
+        logout.onclick = () => {
+          localStorage.removeItem('LocalWorkHub_loggedIn');
+          window.location.href = 'login.html';
+        };
+
+        nav.appendChild(userLabel);
+        nav.appendChild(logout);
+      }
+    }
+
+    // === NAVIGATION HIGHLIGHT ===
     document.querySelectorAll('.site-header nav a').forEach(a=>{
       const href = a.getAttribute('href') || '';
       if (href === path || (href === 'index.html' && path === '')) a.classList.add('active');
     });
 
-    if (path === '' || path === 'index.html') {
-      // home page - nothing dynamic
-      return;
-    }
+    // === INDEX PAGE ===
+    if (path === '' || path === 'index.html') return;
 
+    // === POST PAGE ===
     if (path === 'post.html') {
       const form = document.getElementById('postForm');
       const msg = document.getElementById('postMessage');
@@ -150,33 +179,59 @@
       return;
     }
 
+    // === BROWSE PAGE ===
     if (path === 'browse.html') {
       const listEl = document.getElementById('jobsList');
       const search = document.getElementById('searchInput');
-      const categoryFilter = document.getElementById('categoryFilter');
+      const chipsContainer = document.getElementById('categoryChips');
 
       function render(){
         listEl.innerHTML = '';
         const all = loadJobs();
-        // populate category filter
-        const cats = Array.from(new Set(all.map(j => j.category).filter(Boolean)));
-        categoryFilter.innerHTML = '<option value="">All categories</option>';
-        cats.forEach(c => {
-          const opt = document.createElement('option'); opt.value = c; opt.textContent = c;
-          categoryFilter.appendChild(opt);
+        const q = (search.value || '').toLowerCase();
+
+        // Build unique category list
+        const cats = Array.from(new Set(all.map(j => j.category && j.category.trim()).filter(Boolean)));
+        chipsContainer.innerHTML = '';
+
+        // Current selected category
+        let currentCat = chipsContainer.getAttribute('data-active') || '';
+
+        // "All" chip
+        const allChip = document.createElement('div');
+        allChip.textContent = 'All';
+        allChip.className = 'chip' + (currentCat === '' ? ' active' : '');
+        allChip.onclick = () => {
+          chipsContainer.setAttribute('data-active', '');
+          render();
+        };
+        chipsContainer.appendChild(allChip);
+
+        // Category chips
+        cats.forEach(cat => {
+          const chip = document.createElement('div');
+          chip.textContent = cat;
+          chip.className = 'chip' + (currentCat === cat ? ' active' : '');
+          chip.onclick = () => {
+            chipsContainer.setAttribute('data-active', cat);
+            render();
+          };
+          chipsContainer.appendChild(chip);
         });
 
-        const q = (search.value || '').toLowerCase();
-        const cat = categoryFilter.value;
+        currentCat = chipsContainer.getAttribute('data-active') || '';
 
+        // Filter jobs
         const filtered = all.filter(j => {
-          if (cat && j.category !== cat) return false;
+          if (currentCat && j.category !== currentCat) return false;
           if (!q) return true;
-          return (j.title + ' ' + (j.description||'') + ' ' + (j.location||'')).toLowerCase().includes(q);
+          return (j.title + ' ' + (j.description || '') + ' ' + (j.location || '')).toLowerCase().includes(q);
         });
 
         if (filtered.length === 0) {
-          const empty = document.createElement('div'); empty.className = 'muted'; empty.textContent = 'No jobs found.';
+          const empty = document.createElement('div');
+          empty.className = 'muted';
+          empty.textContent = 'No jobs found.';
           listEl.appendChild(empty);
         } else {
           filtered.forEach(job => {
@@ -188,10 +243,9 @@
                 const accepted = loadAccepted();
                 accepted.unshift(Object.assign({}, j, { acceptedAt: Date.now() }));
                 saveAccepted(accepted);
-                // remove from jobs
                 const jobsLeft = loadJobs().filter(x => x.id !== j.id);
                 saveJobs(jobsLeft);
-                render(); // refresh list
+                render();
                 alert('You accepted: ' + j.title);
               },
               onDelete: function(j){
@@ -209,19 +263,20 @@
       }
 
       search.addEventListener('input', render);
-      categoryFilter.addEventListener('change', render);
-
       render();
       return;
     }
 
+    // === ACCEPTED JOBS PAGE ===
     if (path === 'accepted.html') {
       const listEl = document.getElementById('acceptedList');
       function renderAccepted(){
         listEl.innerHTML = '';
         const accepted = loadAccepted();
         if (!accepted.length) {
-          const p = document.createElement('p'); p.className = 'muted'; p.textContent = "You haven't accepted any jobs yet.";
+          const p = document.createElement('p');
+          p.className = 'muted';
+          p.textContent = "You haven't accepted any jobs yet.";
           listEl.appendChild(p);
           return;
         }
@@ -231,7 +286,6 @@
             showAcceptBtn:false,
             showDelete:true,
             onDelete: function(j){
-              // un-accept (move back to jobs list)
               const ok = confirm('Remove from accepted list and return to jobs?');
               if (!ok) return;
               const acceptedNow = loadAccepted().filter(x => x.id !== j.id);
@@ -243,7 +297,8 @@
               alert('Job moved back to Browse.');
             }
           });
-          const acceptedAt = document.createElement('div'); acceptedAt.className = 'muted';
+          const acceptedAt = document.createElement('div');
+          acceptedAt.className = 'muted';
           acceptedAt.textContent = 'Accepted at: ' + formatDate(job.acceptedAt || job.postedAt || Date.now());
           card.appendChild(acceptedAt);
           listEl.appendChild(card);
@@ -254,9 +309,7 @@
     }
   });
 
-  // expose helpers for debugging in console if needed
-  window.__LocalWorkHub = {
-    loadJobs, saveJobs, loadAccepted, saveAccepted
-  };
+  // === expose helper for debugging ===
+  window.__LocalWorkHub = { loadJobs, saveJobs, loadAccepted, saveAccepted };
 
 })();

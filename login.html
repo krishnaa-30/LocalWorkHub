@@ -12,9 +12,7 @@
   <div class="container">
     <h1 class="logo">Local WorkHub</h1>
     <nav>
-      <a href="index.html">Home</a>
-      <a href="browse.html">Browse</a>
-      <a href="post.html">Post</a>
+      <a href="signup.html">Sign Up</a>
     </nav>
   </div>
 </header>
@@ -22,26 +20,42 @@
 <main class="container" style="max-width:420px; margin-top:36px;">
   <div class="card">
     <h2 style="margin:0 0 8px; color:var(--text);">Login</h2>
-    <p style="margin:0 0 16px; color:var(--muted)">Sign in to manage your posts and accepted jobs.</p>
+    <p style="margin:0 0 16px; color:var(--muted)">Sign in to continue using Local WorkHub.</p>
 
-    <form action="browse.html" method="get">
-      <label style="color:var(--muted); font-weight:700;">Username or Email:</label>
-      <input type="text" id="username" name="username" required>
+    <form id="loginForm">
+      <label style="color:var(--muted); font-weight:700;">Username:</label>
+      <input type="text" id="loginUser" required>
 
       <label style="margin-top:10px; color:var(--muted); font-weight:700;">Password:</label>
-      <input type="password" id="password" name="password" required>
+      <input type="password" id="loginPass" required>
 
       <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
         <button type="submit" class="btn btn-primary">Login</button>
-        <a class="btn btn-outline" href="post.html">Sign Up</a>
-      </div>
-
-      <div class="muted" style="margin-top:12px; font-size:13px;">
-        <a href="#" style="color:var(--muted); text-decoration:underline;">Forgot Password?</a>
+        <a class="btn btn-outline" href="signup.html">Sign Up</a>
       </div>
     </form>
+
+    <div id="loginMsg" class="muted" style="margin-top:10px;"></div>
   </div>
 </main>
 
 <footer class="site-footer">
-  <div class="container">© 2025 Local Wor
+  <div class="container">© 2025 Local WorkHub</div>
+</footer>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value.trim();
+  const users = JSON.parse(localStorage.getItem('LocalWorkHub_users') || '{}');
+  if(users[username] && users[username] === password){
+    localStorage.setItem('LocalWorkHub_loggedIn', username);
+    window.location.href = 'index.html';
+  } else {
+    document.getElementById('loginMsg').textContent = 'Invalid username or password!';
+  }
+});
+</script>
+</body>
+</html>
