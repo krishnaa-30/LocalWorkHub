@@ -1,73 +1,47 @@
-// app.js — FINAL VERSION
-// Dark mode + category chips + login/signup protection + delete/unaccept
+// app.js — Final version (includes Chat system + Dark mode + Access control)
 (function(){
   const LS_KEY = 'localworkhub_jobs_v1';
   const LS_ACCEPTED_KEY = 'localworkhub_accepted_v1';
 
+  // === Utility storage ===
   function sampleJobs(){
-    return [
-      {
-        id: 'j1',
-        title: 'Apartment Deep Cleaning',
-        category: 'Cleaning',
-        pay: 1200,
-        location: 'Powai, Mumbai',
-        description: '2-bedroom apartment deep cleaning. Bring your own supplies.',
-        contact: 'cleaner@example.com',
-        postedAt: Date.now() - 1000 * 60 * 60 * 24
-      },
-      {
-        id: 'j2',
-        title: 'Math Tutor (Class 8)',
-        category: 'Tutoring',
-        pay: 500,
-        location: 'Andheri West, Mumbai',
-        description: '1 hour session, twice a week. Focus on algebra & geometry.',
-        contact: 'tutor@example.com',
-        postedAt: Date.now() - 1000 * 60 * 60 * 4
-      }
-    ];
+    return [];
   }
-
   function loadJobs(){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      return raw ? JSON.parse(raw) : sampleJobs();
-    }catch(e){ return sampleJobs(); }
+    try{ const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : sampleJobs(); }
+    catch(e){ return sampleJobs(); }
   }
-  function saveJobs(jobs){
-    localStorage.setItem(LS_KEY, JSON.stringify(jobs));
-  }
+  function saveJobs(jobs){ localStorage.setItem(LS_KEY, JSON.stringify(jobs)); }
+
   function loadAccepted(){
-    try{
-      const raw = localStorage.getItem(LS_ACCEPTED_KEY);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){ return []; }
+    try{ const raw = localStorage.getItem(LS_ACCEPTED_KEY); return raw ? JSON.parse(raw) : []; }
+    catch(e){ return []; }
   }
   function saveAccepted(list){ localStorage.setItem(LS_ACCEPTED_KEY, JSON.stringify(list)); }
 
   function formatDate(ts){ return new Date(ts).toLocaleString(); }
 
-  // === Job card template ===
+  // === Job Card ===
   function createJobCard(job, opts = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'job-card';
-
     const left = document.createElement('div');
     left.style.flex = '1';
 
-    const title = document.createElement('h3'); title.textContent = job.title;
-    const meta = document.createElement('div'); meta.className = 'meta';
+    const title = document.createElement('h3');
+    title.textContent = job.title;
+    const meta = document.createElement('div');
+    meta.className = 'meta';
     meta.textContent = `${job.category || '—'} • ${job.location || '—'} • ₹${job.pay || 0}`;
 
-    const desc = document.createElement('p'); desc.textContent = job.description || '';
-    const contact = document.createElement('p'); contact.className = 'muted';
-    contact.textContent = `Contact: ${job.contact || '—'}`;
+    const desc = document.createElement('p');
+    desc.textContent = job.description || '';
 
-    left.appendChild(title);
-    left.appendChild(meta);
-    left.appendChild(desc);
-    left.appendChild(contact);
+    const contact = document.createElement('p');
+    contact.className = 'muted';
+    contact.textContent = `Posted by: ${job.poster || 'Anonymous'}`;
+
+    left.append(title, meta, desc, contact);
 
     const right = document.createElement('div');
     right.className = 'job-actions';
@@ -81,67 +55,108 @@
     }
 
     if (opts.showAcceptBtn) {
-      const btn = document.createElement('button');
-      btn.textContent = 'Accept Job';
-      btn.className = 'btn btn-accept';
-      btn.onclick = function(){
-        if (opts.onAccept) opts.onAccept(job);
-      };
-      right.appendChild(btn);
-    }
+  const btn = document.createElement('button');
+  btn.textContent = 'Accept Job';
+  btn.className = 'btn btn-accept';
+
+  // Disable if user is not logged in
+  const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
+  if (!loggedInUser) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.title = 'Please log in to accept jobs';
+    btn.onclick = () => alert('You must log in before accepting a job.');
+  } else {
+    btn.onclick = () => opts.onAccept && opts.onAccept(job);
+  }
+
+  right.appendChild(btn);
+}
+
 
     if (opts.showDelete) {
       const del = document.createElement('button');
       del.textContent = 'Delete';
       del.className = 'btn btn-delete';
-      del.onclick = function(){
-        if (opts.onDelete) opts.onDelete(job);
-      };
+      del.onclick = () => opts.onDelete && opts.onDelete(job);
       right.appendChild(del);
     }
 
-    wrap.appendChild(left);
-    wrap.appendChild(right);
+    if (opts.showChat) {
+      const chatBtn = document.createElement('a');
+      chatBtn.textContent = 'Open Chat';
+      chatBtn.className = 'btn btn-primary';
+      chatBtn.href = `chat.html?job=${encodeURIComponent(job.id)}`;
+      right.appendChild(chatBtn);
+    }
+
+    wrap.append(left, right);
     return wrap;
   }
 
-  // === MAIN PAGE LOGIC ===
+  // === MAIN LOGIC ===
   document.addEventListener('DOMContentLoaded', function(){
     const path = window.location.pathname.split('/').pop() || 'index.html';
 
-    // === LOGIN / SIGNUP PROTECTION ===
+    // === LOGIN CHECK ===
     const loggedIn = localStorage.getItem('LocalWorkHub_loggedIn');
     const publicPages = ['login.html', 'signup.html', 'index.html'];
-
-    // redirect to login if not logged in
     if (!loggedIn && !publicPages.includes(path)) {
       window.location.href = 'login.html';
       return;
     }
 
-    // add logout if logged in
-    if (loggedIn) {
-      const nav = document.querySelector('.site-header nav');
-      if (nav) {
-        const userLabel = document.createElement('span');
-        userLabel.textContent = `Welcome, ${loggedIn}`;
-        userLabel.style.color = 'var(--muted)';
-        userLabel.style.marginRight = '10px';
+// === LOGIN / LOGOUT DYNAMIC HEADER ===
+const header = document.querySelector('.site-header');
+const nav = header?.querySelector('nav');
+const existingWelcome = document.getElementById('welcomeUser');
+if (existingWelcome) existingWelcome.remove();
 
-        const logout = document.createElement('a');
-        logout.textContent = 'Logout';
-        logout.href = '#';
-        logout.onclick = () => {
-          localStorage.removeItem('LocalWorkHub_loggedIn');
-          window.location.href = 'login.html';
-        };
+if (nav) {
+  const loginLink = Array.from(nav.querySelectorAll('a')).find(a => a.href.includes('login.html'));
 
-        nav.appendChild(userLabel);
-        nav.appendChild(logout);
-      }
-    }
+  if (loggedIn) {
+    // Hide Login link if present
+    if (loginLink) loginLink.style.display = 'none';
 
-    // === NAVIGATION HIGHLIGHT ===
+    // Create welcome message below heading
+    const welcome = document.createElement('div');
+    welcome.id = 'welcomeUser';
+    welcome.innerHTML = `
+      <span style="
+        background: linear-gradient(135deg, #3b82f6, #facc15);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: block;
+        margin-top: 8px;
+      ">
+        👋 Welcome, ${loggedIn}!
+      </span>
+    `;
+    // Insert below header logo
+    header.appendChild(welcome);
+
+    // Add Logout link in navbar
+    const logout = document.createElement('a');
+    logout.textContent = 'Logout';
+    logout.href = '#';
+    logout.style.marginLeft = '12px';
+    logout.onclick = () => {
+      localStorage.removeItem('LocalWorkHub_loggedIn');
+      window.location.href = 'index.html';
+    };
+    nav.append(logout);
+  } else {
+    // Show login link normally
+    if (loginLink) loginLink.style.display = 'inline';
+  }
+}
+
+
+
+    // === NAV ACTIVE ===
     document.querySelectorAll('.site-header nav a').forEach(a=>{
       const href = a.getAttribute('href') || '';
       if (href === path || (href === 'index.html' && path === '')) a.classList.add('active');
@@ -150,31 +165,33 @@
     // === INDEX PAGE ===
     if (path === '' || path === 'index.html') return;
 
-    // === POST PAGE ===
+    // === POST JOB PAGE ===
     if (path === 'post.html') {
       const form = document.getElementById('postForm');
       const msg = document.getElementById('postMessage');
       if (!form) return;
 
-      form.addEventListener('submit', function(e){
+      form.addEventListener('submit', e=>{
         e.preventDefault();
         const fd = new FormData(form);
+        const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
         const job = {
           id: 'job_' + Date.now(),
-          title: (fd.get('title') || '').trim(),
-          category: (fd.get('category') || '').trim(),
+          title: fd.get('title').trim(),
+          category: fd.get('category').trim(),
           pay: Number(fd.get('pay') || 0),
-          location: (fd.get('location') || '').trim(),
-          description: (fd.get('description') || '').trim(),
-          contact: (fd.get('contact') || '').trim(),
-          postedAt: Date.now()
+          location: fd.get('location').trim(),
+          description: fd.get('description').trim(),
+          contact: fd.get('contact').trim(),
+          postedAt: Date.now(),
+          poster: loggedInUser
         };
         const jobs = loadJobs();
         jobs.unshift(job);
         saveJobs(jobs);
+        msg.textContent = 'Job posted successfully!';
         form.reset();
-        msg.textContent = 'Job posted! Redirecting to Browse...';
-        setTimeout(()=> { window.location.href = 'browse.html'; }, 700);
+        setTimeout(()=>window.location.href='browse.html',800);
       });
       return;
     }
@@ -184,85 +201,70 @@
       const listEl = document.getElementById('jobsList');
       const search = document.getElementById('searchInput');
       const chipsContainer = document.getElementById('categoryChips');
+      const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
 
       function render(){
         listEl.innerHTML = '';
         const all = loadJobs();
         const q = (search.value || '').toLowerCase();
-
-        // Build unique category list
         const cats = Array.from(new Set(all.map(j => j.category && j.category.trim()).filter(Boolean)));
         chipsContainer.innerHTML = '';
-
-        // Current selected category
         let currentCat = chipsContainer.getAttribute('data-active') || '';
 
-        // "All" chip
+        // Chips
         const allChip = document.createElement('div');
         allChip.textContent = 'All';
         allChip.className = 'chip' + (currentCat === '' ? ' active' : '');
-        allChip.onclick = () => {
-          chipsContainer.setAttribute('data-active', '');
-          render();
-        };
+        allChip.onclick = ()=>{ chipsContainer.setAttribute('data-active',''); render(); };
         chipsContainer.appendChild(allChip);
-
-        // Category chips
-        cats.forEach(cat => {
-          const chip = document.createElement('div');
-          chip.textContent = cat;
-          chip.className = 'chip' + (currentCat === cat ? ' active' : '');
-          chip.onclick = () => {
-            chipsContainer.setAttribute('data-active', cat);
-            render();
-          };
+        cats.forEach(cat=>{
+          const chip=document.createElement('div');
+          chip.textContent=cat;
+          chip.className='chip'+(currentCat===cat?' active':'');
+          chip.onclick=()=>{chipsContainer.setAttribute('data-active',cat); render();};
           chipsContainer.appendChild(chip);
         });
-
         currentCat = chipsContainer.getAttribute('data-active') || '';
 
-        // Filter jobs
-        const filtered = all.filter(j => {
+        const filtered = all.filter(j=>{
           if (currentCat && j.category !== currentCat) return false;
           if (!q) return true;
-          return (j.title + ' ' + (j.description || '') + ' ' + (j.location || '')).toLowerCase().includes(q);
+          return (j.title+j.description+j.location).toLowerCase().includes(q);
         });
 
-        if (filtered.length === 0) {
-          const empty = document.createElement('div');
-          empty.className = 'muted';
-          empty.textContent = 'No jobs found.';
+        if (!filtered.length){
+          const empty=document.createElement('div');
+          empty.className='muted';
+          empty.textContent='No jobs found.';
           listEl.appendChild(empty);
         } else {
-          filtered.forEach(job => {
-            const card = createJobCard(job, {
-              showAcceptBtn: true,
-              showContactLink: true,
-              showDelete: true,
-              onAccept: function(j){
-                const accepted = loadAccepted();
-                accepted.unshift(Object.assign({}, j, { acceptedAt: Date.now() }));
+          filtered.forEach(job=>{
+            const card=createJobCard(job,{
+              showAcceptBtn:true,
+              showContactLink:true,
+              showDelete: job.poster===loggedInUser,
+              onAccept:function(j){
+                const accepted=loadAccepted();
+                accepted.unshift({...j,acceptedAt:Date.now(),acceptedBy:loggedInUser});
                 saveAccepted(accepted);
-                const jobsLeft = loadJobs().filter(x => x.id !== j.id);
+                const jobsLeft=loadJobs().filter(x=>x.id!==j.id);
                 saveJobs(jobsLeft);
+                alert('You accepted: '+j.title);
                 render();
-                alert('You accepted: ' + j.title);
               },
-              onDelete: function(j){
-                const ok = confirm('Delete this job permanently?');
-                if(!ok) return;
-                const next = loadJobs().filter(x => x.id !== j.id);
-                saveJobs(next);
-                render();
-                alert('Job deleted.');
+              onDelete:function(j){
+                if(confirm('Delete this job?')){
+                  const next=loadJobs().filter(x=>x.id!==j.id);
+                  saveJobs(next);
+                  render();
+                }
               }
             });
             listEl.appendChild(card);
           });
         }
       }
-
-      search.addEventListener('input', render);
+      search.addEventListener('input',render);
       render();
       return;
     }
@@ -270,46 +272,148 @@
     // === ACCEPTED JOBS PAGE ===
     if (path === 'accepted.html') {
       const listEl = document.getElementById('acceptedList');
+      const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
+
       function renderAccepted(){
         listEl.innerHTML = '';
-        const accepted = loadAccepted();
-        if (!accepted.length) {
-          const p = document.createElement('p');
-          p.className = 'muted';
-          p.textContent = "You haven't accepted any jobs yet.";
+        const accepted = loadAccepted().filter(j=>j.acceptedBy===loggedInUser);
+        if (!accepted.length){
+          const p=document.createElement('p');
+          p.className='muted';
+          p.textContent='You haven’t accepted any jobs yet.';
           listEl.appendChild(p);
           return;
         }
-        accepted.forEach(job => {
-          const card = createJobCard(job, {
+        accepted.forEach(job=>{
+          const card=createJobCard(job,{
             showContactLink:true,
             showAcceptBtn:false,
             showDelete:true,
-            onDelete: function(j){
-              const ok = confirm('Remove from accepted list and return to jobs?');
-              if (!ok) return;
-              const acceptedNow = loadAccepted().filter(x => x.id !== j.id);
-              saveAccepted(acceptedNow);
-              const jobs = loadJobs();
-              jobs.unshift(Object.assign({}, j, { postedAt: Date.now() }));
-              saveJobs(jobs);
-              renderAccepted();
-              alert('Job moved back to Browse.');
+            showChat:true,
+            onDelete:function(j){
+              if(confirm('Unaccept this job?')){
+                const rest=loadAccepted().filter(x=>x.id!==j.id);
+                saveAccepted(rest);
+                const jobs=loadJobs();
+                jobs.unshift({...j,postedAt:Date.now()});
+                saveJobs(jobs);
+                renderAccepted();
+              }
             }
           });
-          const acceptedAt = document.createElement('div');
-          acceptedAt.className = 'muted';
-          acceptedAt.textContent = 'Accepted at: ' + formatDate(job.acceptedAt || job.postedAt || Date.now());
-          card.appendChild(acceptedAt);
           listEl.appendChild(card);
         });
       }
       renderAccepted();
       return;
     }
+    // === MY POSTED JOBS PAGE ===
+if (path === 'myjobs.html') {
+  const listEl = document.getElementById('myJobsList');
+  const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
+  const allJobs = loadJobs();
+  const acceptedJobs = loadAccepted();
+
+  // Filter jobs posted by current user
+  const myJobs = allJobs.filter(j => j.poster === loggedInUser);
+
+  listEl.innerHTML = '';
+
+  if (!myJobs.length) {
+    const msg = document.createElement('p');
+    msg.className = 'muted';
+    msg.textContent = 'You have not posted any jobs yet.';
+    listEl.appendChild(msg);
+    return;
+  }
+
+  myJobs.forEach(job => {
+    const card = createJobCard(job, {
+      showContactLink: false,
+      showAcceptBtn: false,
+      showDelete: true,
+      onDelete: function(j) {
+        if (confirm('Delete this posted job?')) {
+          const next = loadJobs().filter(x => x.id !== j.id);
+          saveJobs(next);
+          window.location.reload();
+        }
+      }
+    });
+
+    // Find who accepted it (if anyone)
+    const accepted = acceptedJobs.find(a => a.id === job.id);
+    const status = document.createElement('p');
+    status.className = 'muted';
+
+    if (accepted && accepted.acceptedBy) {
+      status.innerHTML = `Accepted by: <strong>${accepted.acceptedBy}</strong> `;
+      const chatBtn = document.createElement('a');
+      chatBtn.textContent = 'Chat';
+      chatBtn.className = 'btn btn-primary';
+      chatBtn.href = `chat.html?job=${encodeURIComponent(job.id)}`;
+      status.appendChild(chatBtn);
+    } else {
+      status.textContent = 'No one has accepted this job yet.';
+    }
+
+    card.appendChild(status);
+    listEl.appendChild(card);
   });
 
-  // === expose helper for debugging ===
-  window.__LocalWorkHub = { loadJobs, saveJobs, loadAccepted, saveAccepted };
+  return;
+}
+
+
+    // === CHAT PAGE ===
+    if (path === 'chat.html') {
+      const params = new URLSearchParams(window.location.search);
+      const jobId = params.get('job');
+      const jobTitle = document.getElementById('jobTitle');
+      const acceptedBy = document.getElementById('acceptedBy');
+      const chatBox = document.getElementById('chatBox');
+      const chatForm = document.getElementById('chatForm');
+      const chatInput = document.getElementById('chatInput');
+      const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
+
+      const allAccepted = loadAccepted();
+      const job = allAccepted.find(j => j.id === jobId);
+      if (!job){
+        document.getElementById('jobInfo').innerHTML = '<p>No chat found for this job.</p>';
+        chatForm.style.display='none';
+        return;
+      }
+
+      jobTitle.textContent = job.title;
+      acceptedBy.textContent = job.acceptedBy || 'Unknown';
+
+      const CHAT_KEY = `chat_${jobId}`;
+      let messages = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
+
+      function renderChat(){
+        chatBox.innerHTML='';
+        messages.forEach(m=>{
+          const msg = document.createElement('p');
+          msg.innerHTML = `<strong>${m.sender}:</strong> ${m.text}`;
+          chatBox.appendChild(msg);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+      renderChat();
+
+      chatForm.addEventListener('submit', e=>{
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if(!text) return;
+        const msgObj = {sender: loggedInUser, text, time: Date.now()};
+        messages.push(msgObj);
+        localStorage.setItem(CHAT_KEY, JSON.stringify(messages));
+        chatInput.value='';
+        renderChat();
+      });
+      return;
+    }
+
+  });
 
 })();

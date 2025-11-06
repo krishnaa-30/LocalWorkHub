@@ -247,3 +247,62 @@ input:focus, textarea:focus{
   box-shadow: 0 3px 18px rgba(139,92,246,0.25);
   border: none;
 }
+/* === Global Enhancements === */
+a {
+  color: #60a5fa;
+  transition: color 0.3s;
+}
+a:hover {
+  color: #facc15;
+}
+
+.btn {
+  border-radius: 10px;
+  font-weight: 600;
+}
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+.btn-primary:hover {
+  background: #2563eb;
+}
+.btn-delete {
+  background: #ef4444;
+  color: white;
+}
+.btn-delete:hover {
+  background: #dc2626;
+}
+.card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+:root {
+  --card-glass-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+}
+
+.card {
+  background: var(--card-glass-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,0.08);
+}
+button[disabled] {
+  cursor: not-allowed;
+  background: rgba(255,255,255,0.1) !important;
+  color: #9ca3af !important;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+

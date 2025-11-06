@@ -1,52 +1,241 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Local WorkHub — Home</title>
+  <title>Local WorkHub — Find & Post Local Jobs</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+  /* --- Home Page Enhanced Style (Perfect Dark Blend) --- */
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+  body {
+    background: linear-gradient(135deg, #0a0f24, #111827);
+    color: #e5e7eb;
+    font-family: "Poppins", sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* --- Header --- */
+  .site-header {
+    background: rgba(17, 25, 40, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .site-header a {
+    color: #dbeafe;
+    font-weight: 500;
+  }
+  .site-header a:hover {
+    color: #facc15;
+  }
+
+  /* --- Hero Section --- */
+  .hero {
+    text-align: center;
+    padding: 120px 20px 70px;
+    background: linear-gradient(160deg, rgba(59,130,246,0.15), rgba(17,24,39,0.6));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+
+  .hero p {
+    font-size: 1.1rem;
+    color: #cbd5e1;
+    max-width: 600px;
+    margin: 0 auto 40px;
+  }
+
+  .hero-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .hero-buttons a {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: white;
+    padding: 14px 30px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.4);
+    transition: 0.3s;
+  }
+
+  .hero-buttons a:nth-child(2) {
+    background: linear-gradient(135deg, #facc15, #fbbf24);
+    color: #1e293b;
+    box-shadow: 0 4px 20px rgba(250,204,21,0.4);
+  }
+
+  .hero-buttons a:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+
+  /* --- Features Section --- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+    padding: 80px 20px;
+    max-width: 1100px;
+    margin: auto;
+  }
+
+  .feature {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    transition: all 0.3s ease;
+  }
+
+  .feature:hover {
+    transform: translateY(-8px);
+    background: rgba(59,130,246,0.12);
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  .feature h3 {
+    font-size: 1.3rem;
+    color: #f9fafb;
+    margin-bottom: 10px;
+  }
+
+  .feature p {
+    color: #a1a1aa;
+    font-size: 0.95rem;
+  }
+
+  /* --- CTA Section --- */
+  .cta-section {
+    text-align: center;
+    padding: 90px 20px;
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    color: #f8fafc;
+    margin-top: 40px;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+  }
+
+  .cta-section h2 {
+    font-size: 2.2rem;
+    margin-bottom: 16px;
+  }
+
+  .cta-section p {
+    margin-bottom: 20px;
+    color: #e2e8f0;
+  }
+
+  .cta-section a {
+    display: inline-block;
+    background: #fbbf24;
+    color: #1e293b;
+    padding: 14px 28px;
+    font-weight: 600;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(251,191,36,0.4);
+    transition: 0.3s;
+  }
+
+  .cta-section a:hover {
+    background: #fde047;
+    transform: scale(1.05);
+  }
+
+  footer {
+    text-align: center;
+    padding: 40px 10px;
+    color: #9ca3af;
+    font-size: 0.9rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 60px;
+  }
+
+  /* Smooth fade-in animation */
+  main, .site-header, footer {
+    animation: fadeIn 0.8s ease-in;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
 </head>
+
 <body>
   <header class="site-header">
-    <div class="container">
-      <h1 class="logo">Local WorkHub</h1>
-      <nav>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;padding:20px 0;">
+      <h1 class="logo" style="color:#3b82f6;font-size:1.8rem;">Local <span style="color:#facc15;">WorkHub</span></h1>
+      <nav style="display:flex;gap:20px;">
         <a href="index.html" class="active">Home</a>
         <a href="browse.html">Browse Jobs</a>
         <a href="post.html">Post a Job</a>
+        <a href="myjobs.html">My Posted Jobs</a>
         <a href="accepted.html">My Accepted Jobs</a>
+        <a href="login.html">Login</a>
       </nav>
     </div>
   </header>
 
-  <main class="container main">
-    <section class="hero card">
-      <h2>Find local jobs, fast.</h2>
-      <p>Post quick gigs or accept work in your neighbourhood.</p>
-      <div class="hero-ctas" style="margin-top:16px;">
-        <a class="btn btn-outline" href="post.html">Post a Job</a>
-        <a class="btn btn-primary" href="browse.html">Browse Jobs</a>
+  <main>
+    <section class="hero">
+      <h1>Empowering Local Work Connections</h1>
+      <p>Find trusted local jobs or hire skilled workers — all in one place.  
+        <br>Simple, fast, and built for your community.</p>
+      <div class="hero-buttons">
+        <a href="browse.html">Find Jobs</a>
+        <a href="post.html" style="background:#fbbf24;color:#1e293b;">Post a Job</a>
       </div>
     </section>
 
     <section class="features">
       <div class="feature">
-        <h3>Local</h3>
-        <p>Only jobs from your community or nearby areas.</p>
+        <h3>💼 Post Your Jobs</h3>
+        <p>Need help with cleaning, tutoring, delivery, or design? Post your job in seconds and reach nearby workers instantly.</p>
       </div>
       <div class="feature">
-        <h3>Simple</h3>
-        <p>Easy job posting with minimal fields—takes about a minute.</p>
+        <h3>⚡ Quick Hiring</h3>
+        <p>Accept work requests fast. Manage accepted jobs and communicate easily through our built-in chat system.</p>
       </div>
       <div class="feature">
-        <h3>Free</h3>
-        <p>No fees for MVP users. Keep the money you earn.</p>
+        <h3>💬 Built-in Chat</h3>
+        <p>Stay connected! Chat directly with job posters or workers — all messages are saved safely on your device.</p>
       </div>
+      <div class="feature">
+        <h3>🧭 Easy Navigation</h3>
+        <p>Seamless dark-mode design with smooth transitions, modern UI, and intuitive user experience.</p>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <h2>Start Building Your Local Career Today</h2>
+      <p>Join Local WorkHub — where opportunities meet talent.</p>
+      <a href="signup.html">Join Now</a>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">Local WorkHub — front-end prototype</div>
+  <footer>
+    <p>© 2025 Local WorkHub • Designed by <strong> TEAM $ R3</strong></p>
   </footer>
 
   <script src="app.js" defer></script>
