@@ -1,65 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Sign Up - Local WorkHub</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+  <header class="site-header">
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;">
+      <div>
+        <h1 class="logo" style="font-size:1.4rem;">Local <span style="color:var(--accent);">WorkHub</span></h1>
+      </div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="login.html">Login</a>
+        <a href="signup.html" class="active">Sign Up</a>
+      </nav>
+    </div>
+  </header>
 
-<header class="site-header">
-  <div class="container">
-    <h1 class="logo">Local WorkHub</h1>
-    <nav>
-      <a href="login.html">Login</a>
-    </nav>
-  </div>
-</header>
+  <main class="container" style="max-width:480px;margin:48px auto;">
+    <form id="signupForm" class="card">
+      <h2 style="margin:0 0 8px; color:var(--text);">Create Account</h2>
+      <p class="muted" style="margin-bottom:12px;">Sign up to start posting or accepting jobs.</p>
 
-<main class="container" style="max-width:420px; margin-top:36px;">
-  <div class="card">
-    <h2 style="margin:0 0 8px; color:var(--text);">Create Account</h2>
-    <p style="margin:0 0 16px; color:var(--muted)">Sign up to start posting or accepting jobs.</p>
+      <label>Username
+        <input type="text" id="signupUser" required />
+      </label>
+      <label>Password
+        <input type="password" id="signupPass" required />
+      </label>
 
-    <form id="signupForm">
-      <label style="color:var(--muted); font-weight:700;">Username:</label>
-      <input type="text" id="signupUser" required>
-
-      <label style="margin-top:10px; color:var(--muted); font-weight:700;">Password:</label>
-      <input type="password" id="signupPass" required>
-
-      <div style="margin-top:16px; display:flex; gap:10px;">
+      <div class="form-actions">
         <button type="submit" class="btn btn-primary">Sign Up</button>
         <a class="btn btn-outline" href="login.html">Cancel</a>
       </div>
+
+      <div id="signupMsg" class="muted" style="margin-top:12px;"></div>
     </form>
+  </main>
 
-    <div id="signupMsg" class="muted" style="margin-top:10px;"></div>
-  </div>
-</main>
+  <footer class="site-footer"><div class="container">© 2025 Local WorkHub</div></footer>
 
-<footer class="site-footer">
-  <div class="container">© 2025 Local WorkHub</div>
-</footer>
-
-<script>
-document.getElementById('signupForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const username = document.getElementById('signupUser').value.trim();
-  const password = document.getElementById('signupPass').value.trim();
-  if(!username || !password) return;
-
-  const users = JSON.parse(localStorage.getItem('LocalWorkHub_users') || '{}');
-  if(users[username]){
-    document.getElementById('signupMsg').textContent = 'Username already exists!';
-    return;
-  }
-  users[username] = password;
-  localStorage.setItem('LocalWorkHub_users', JSON.stringify(users));
-  document.getElementById('signupMsg').textContent = 'Account created! Redirecting to login...';
-  setTimeout(()=>window.location.href = 'login.html', 1200);
-});
-</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const form = document.getElementById('signupForm');
+      const msg = document.getElementById('signupMsg');
+      form.addEventListener('submit', e=>{
+        e.preventDefault();
+        const u = document.getElementById('signupUser').value.trim();
+        const p = document.getElementById('signupPass').value.trim();
+        if(!u || !p) return;
+        const users = JSON.parse(localStorage.getItem('LocalWorkHub_users') || '{}');
+        if(users[u]){
+          msg.textContent = 'Username already exists';
+          return;
+        }
+        users[u] = p;
+        localStorage.setItem('LocalWorkHub_users', JSON.stringify(users));
+        msg.textContent = 'Account created — redirecting to login...';
+        setTimeout(()=>window.location.href='login.html',900);
+      });
+    });
+  </script>
 </body>
 </html>

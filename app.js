@@ -1,12 +1,10 @@
-// app.js — Final version (includes Chat system + Dark mode + Access control)
+// app.js — Final integrated version
 (function(){
   const LS_KEY = 'localworkhub_jobs_v1';
   const LS_ACCEPTED_KEY = 'localworkhub_accepted_v1';
 
-  // === Utility storage ===
-  function sampleJobs(){
-    return [];
-  }
+  function sampleJobs(){ return []; }
+
   function loadJobs(){
     try{ const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : sampleJobs(); }
     catch(e){ return sampleJobs(); }
@@ -19,29 +17,25 @@
   }
   function saveAccepted(list){ localStorage.setItem(LS_ACCEPTED_KEY, JSON.stringify(list)); }
 
-  function formatDate(ts){ return new Date(ts).toLocaleString(); }
-
-  // === Job Card ===
+  // Job card factory
   function createJobCard(job, opts = {}) {
     const wrap = document.createElement('div');
     wrap.className = 'job-card';
+
     const left = document.createElement('div');
     left.style.flex = '1';
 
-    const title = document.createElement('h3');
-    title.textContent = job.title;
-    const meta = document.createElement('div');
-    meta.className = 'meta';
+    const title = document.createElement('h3'); title.textContent = job.title;
+    const meta = document.createElement('div'); meta.className = 'meta';
     meta.textContent = `${job.category || '—'} • ${job.location || '—'} • ₹${job.pay || 0}`;
 
-    const desc = document.createElement('p');
-    desc.textContent = job.description || '';
+    const desc = document.createElement('p'); desc.textContent = job.description || '';
+    const poster = document.createElement('p'); poster.className = 'muted'; poster.textContent = `Posted by: ${job.poster || job.contact || 'Anonymous'}`;
 
-    const contact = document.createElement('p');
-    contact.className = 'muted';
-    contact.textContent = `Posted by: ${job.poster || 'Anonymous'}`;
-
-    left.append(title, meta, desc, contact);
+    left.appendChild(title);
+    left.appendChild(meta);
+    left.appendChild(desc);
+    left.appendChild(poster);
 
     const right = document.createElement('div');
     right.className = 'job-actions';
@@ -55,24 +49,21 @@
     }
 
     if (opts.showAcceptBtn) {
-  const btn = document.createElement('button');
-  btn.textContent = 'Accept Job';
-  btn.className = 'btn btn-accept';
+      const btn = document.createElement('button');
+      btn.textContent = 'Accept Job';
+      btn.className = 'btn btn-accept';
 
-  // Disable if user is not logged in
-  const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
-  if (!loggedInUser) {
-    btn.disabled = true;
-    btn.style.opacity = '0.6';
-    btn.title = 'Please log in to accept jobs';
-    btn.onclick = () => alert('You must log in before accepting a job.');
-  } else {
-    btn.onclick = () => opts.onAccept && opts.onAccept(job);
-  }
-
-  right.appendChild(btn);
-}
-
+      const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
+      if (!loggedInUser) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.title = 'Please log in to accept jobs';
+        btn.onclick = () => alert('Please log in to accept jobs.');
+      } else {
+        btn.onclick = () => opts.onAccept && opts.onAccept(job);
+      }
+      right.appendChild(btn);
+    }
 
     if (opts.showDelete) {
       const del = document.createElement('button');
@@ -83,337 +74,307 @@
     }
 
     if (opts.showChat) {
-      const chatBtn = document.createElement('a');
-      chatBtn.textContent = 'Open Chat';
-      chatBtn.className = 'btn btn-primary';
-      chatBtn.href = `chat.html?job=${encodeURIComponent(job.id)}`;
-      right.appendChild(chatBtn);
+      const link = document.createElement('a');
+      link.textContent = 'Chat';
+      link.className = 'btn btn-primary';
+      link.href = `chat.html?job=${encodeURIComponent(job.id)}`;
+      right.appendChild(link);
     }
 
-    wrap.append(left, right);
+    wrap.appendChild(left);
+    wrap.appendChild(right);
     return wrap;
   }
 
-  // === MAIN LOGIC ===
+  // DOM ready
   document.addEventListener('DOMContentLoaded', function(){
     const path = window.location.pathname.split('/').pop() || 'index.html';
-
-    // === LOGIN CHECK ===
     const loggedIn = localStorage.getItem('LocalWorkHub_loggedIn');
-    const publicPages = ['login.html', 'signup.html', 'index.html'];
+    const publicPages = ['login.html','signup.html','index.html'];
+
+    // redirect to login if protected page and not logged in
     if (!loggedIn && !publicPages.includes(path)) {
       window.location.href = 'login.html';
       return;
     }
 
-// === LOGIN / LOGOUT DYNAMIC HEADER ===
-const header = document.querySelector('.site-header');
-const nav = header?.querySelector('nav');
-const existingWelcome = document.getElementById('welcomeUser');
-if (existingWelcome) existingWelcome.remove();
+    // header: show welcome below heading and hide login when logged
+    const header = document.querySelector('.site-header');
+    const nav = header?.querySelector('nav');
 
-if (nav) {
-  const loginLink = Array.from(nav.querySelectorAll('a')).find(a => a.href.includes('login.html'));
+    // remove existing welcome if any
+    const existingWelcome = document.getElementById('welcomeUser');
+    if (existingWelcome) existingWelcome.remove();
 
-  if (loggedIn) {
-    // Hide Login link if present
-    if (loginLink) loginLink.style.display = 'none';
+    if (nav) {
+      const loginLink = Array.from(nav.querySelectorAll('a')).find(a => a.getAttribute('href') && a.getAttribute('href').includes('login.html'));
 
-    // Create welcome message below heading
-    const welcome = document.createElement('div');
-    welcome.id = 'welcomeUser';
-    welcome.innerHTML = `
-      <span style="
-        background: linear-gradient(135deg, #3b82f6, #facc15);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 700;
-        font-size: 1.1rem;
-        display: block;
-        margin-top: 8px;
-      ">
-        👋 Welcome, ${loggedIn}!
-      </span>
-    `;
-    // Insert below header logo
-    header.appendChild(welcome);
+      if (loggedIn) {
+        if (loginLink) loginLink.style.display = 'none';
 
-    // Add Logout link in navbar
-    const logout = document.createElement('a');
-    logout.textContent = 'Logout';
-    logout.href = '#';
-    logout.style.marginLeft = '12px';
-    logout.onclick = () => {
-      localStorage.removeItem('LocalWorkHub_loggedIn');
-      window.location.href = 'index.html';
-    };
-    nav.append(logout);
-  } else {
-    // Show login link normally
-    if (loginLink) loginLink.style.display = 'inline';
-  }
-}
+        // welcome block below header
+        const welcome = document.createElement('div');
+        welcome.id = 'welcomeUser';
+        welcome.style.textAlign = 'center';
+        welcome.style.padding = '6px 0 0';
+        welcome.innerHTML = `<span style="background:linear-gradient(135deg,var(--accent), #facc15); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:700; font-size:1.05rem; display:block;">👋 Welcome, ${loggedIn}!</span>`;
+        header.appendChild(welcome);
 
+        const logout = document.createElement('a');
+        logout.textContent = 'Logout';
+        logout.href = '#';
+        logout.style.marginLeft = '12px';
+        logout.onclick = () => {
+          localStorage.removeItem('LocalWorkHub_loggedIn');
+          window.location.href = 'index.html';
+        };
+        nav.appendChild(logout);
+      } else {
+        if (loginLink) loginLink.style.display = 'inline';
+      }
+    }
 
-
-    // === NAV ACTIVE ===
+    // nav active highlight
     document.querySelectorAll('.site-header nav a').forEach(a=>{
       const href = a.getAttribute('href') || '';
       if (href === path || (href === 'index.html' && path === '')) a.classList.add('active');
     });
 
-    // === INDEX PAGE ===
+    // INDEX - nothing dynamic
     if (path === '' || path === 'index.html') return;
 
-    // === POST JOB PAGE ===
+    // POST PAGE
     if (path === 'post.html') {
       const form = document.getElementById('postForm');
       const msg = document.getElementById('postMessage');
       if (!form) return;
-
-      form.addEventListener('submit', e=>{
+      form.addEventListener('submit', function(e){
         e.preventDefault();
         const fd = new FormData(form);
-        const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
+        const poster = localStorage.getItem('LocalWorkHub_loggedIn');
+        if (!poster) { msg.textContent = 'Please login to post jobs.'; return; }
         const job = {
           id: 'job_' + Date.now(),
-          title: fd.get('title').trim(),
-          category: fd.get('category').trim(),
-          pay: Number(fd.get('pay') || 0),
-          location: fd.get('location').trim(),
-          description: fd.get('description').trim(),
-          contact: fd.get('contact').trim(),
+          title: (fd.get('title')||'').trim(),
+          category: (fd.get('category')||'').trim(),
+          pay: Number(fd.get('pay')||0),
+          location: (fd.get('location')||'').trim(),
+          description: (fd.get('description')||'').trim(),
+          contact: (fd.get('contact')||'').trim(),
           postedAt: Date.now(),
-          poster: loggedInUser
+          poster
         };
         const jobs = loadJobs();
         jobs.unshift(job);
         saveJobs(jobs);
-        msg.textContent = 'Job posted successfully!';
         form.reset();
-        setTimeout(()=>window.location.href='browse.html',800);
+        msg.textContent = 'Job posted! Redirecting to Browse...';
+        setTimeout(()=> window.location.href = 'browse.html',700);
       });
       return;
     }
 
-    // === BROWSE PAGE ===
+    // BROWSE PAGE
     if (path === 'browse.html') {
       const listEl = document.getElementById('jobsList');
       const search = document.getElementById('searchInput');
       const chipsContainer = document.getElementById('categoryChips');
-      const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
 
       function render(){
         listEl.innerHTML = '';
         const all = loadJobs();
         const q = (search.value || '').toLowerCase();
+
+        // categories -> chips
         const cats = Array.from(new Set(all.map(j => j.category && j.category.trim()).filter(Boolean)));
         chipsContainer.innerHTML = '';
         let currentCat = chipsContainer.getAttribute('data-active') || '';
 
-        // Chips
         const allChip = document.createElement('div');
         allChip.textContent = 'All';
         allChip.className = 'chip' + (currentCat === '' ? ' active' : '');
         allChip.onclick = ()=>{ chipsContainer.setAttribute('data-active',''); render(); };
         chipsContainer.appendChild(allChip);
+
         cats.forEach(cat=>{
-          const chip=document.createElement('div');
-          chip.textContent=cat;
-          chip.className='chip'+(currentCat===cat?' active':'');
-          chip.onclick=()=>{chipsContainer.setAttribute('data-active',cat); render();};
+          const chip = document.createElement('div');
+          chip.textContent = cat;
+          chip.className = 'chip' + (currentCat === cat ? ' active' : '');
+          chip.onclick = ()=>{ chipsContainer.setAttribute('data-active', cat); render(); };
           chipsContainer.appendChild(chip);
         });
+
         currentCat = chipsContainer.getAttribute('data-active') || '';
 
-        const filtered = all.filter(j=>{
+        const filtered = all.filter(j => {
           if (currentCat && j.category !== currentCat) return false;
           if (!q) return true;
-          return (j.title+j.description+j.location).toLowerCase().includes(q);
+          return (j.title + ' ' + (j.description||'') + ' ' + (j.location||'')).toLowerCase().includes(q);
         });
 
-        if (!filtered.length){
-          const empty=document.createElement('div');
-          empty.className='muted';
-          empty.textContent='No jobs found.';
-          listEl.appendChild(empty);
+        if (!filtered.length) {
+          const empty = document.createElement('div'); empty.className = 'muted'; empty.textContent = 'No jobs found.'; listEl.appendChild(empty);
         } else {
           filtered.forEach(job=>{
-            const card=createJobCard(job,{
-              showAcceptBtn:true,
-              showContactLink:true,
-              showDelete: job.poster===loggedInUser,
-              onAccept:function(j){
-                const accepted=loadAccepted();
-                accepted.unshift({...j,acceptedAt:Date.now(),acceptedBy:loggedInUser});
+            const card = createJobCard(job, {
+              showAcceptBtn: true,
+              showContactLink: true,
+              showDelete: job.poster === localStorage.getItem('LocalWorkHub_loggedIn'),
+              onAccept: function(j){
+                const accepted = loadAccepted();
+                accepted.unshift(Object.assign({}, j, { acceptedAt: Date.now(), acceptedBy: localStorage.getItem('LocalWorkHub_loggedIn') }));
                 saveAccepted(accepted);
-                const jobsLeft=loadJobs().filter(x=>x.id!==j.id);
+                const jobsLeft = loadJobs().filter(x => x.id !== j.id);
                 saveJobs(jobsLeft);
-                alert('You accepted: '+j.title);
+                alert('Accepted: ' + j.title);
                 render();
               },
-              onDelete:function(j){
-                if(confirm('Delete this job?')){
-                  const next=loadJobs().filter(x=>x.id!==j.id);
-                  saveJobs(next);
-                  render();
-                }
+              onDelete: function(j){
+                if (!confirm('Delete this job?')) return;
+                const next = loadJobs().filter(x => x.id !== j.id);
+                saveJobs(next);
+                render();
               }
             });
             listEl.appendChild(card);
           });
         }
       }
-      search.addEventListener('input',render);
+
+      search.addEventListener('input', render);
       render();
       return;
     }
 
-    // === ACCEPTED JOBS PAGE ===
-    if (path === 'accepted.html') {
-      const listEl = document.getElementById('acceptedList');
-      const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
+    // MY POSTED JOBS
+    if (path === 'myjobs.html') {
+      const listEl = document.getElementById('myJobsList');
+      const logged = localStorage.getItem('LocalWorkHub_loggedIn');
+      const allJobs = loadJobs();
+      const accepted = loadAccepted();
 
-      function renderAccepted(){
-        listEl.innerHTML = '';
-        const accepted = loadAccepted().filter(j=>j.acceptedBy===loggedInUser);
-        if (!accepted.length){
-          const p=document.createElement('p');
-          p.className='muted';
-          p.textContent='You haven’t accepted any jobs yet.';
-          listEl.appendChild(p);
-          return;
-        }
-        accepted.forEach(job=>{
-          const card=createJobCard(job,{
-            showContactLink:true,
-            showAcceptBtn:false,
-            showDelete:true,
-            showChat:true,
-            onDelete:function(j){
-              if(confirm('Unaccept this job?')){
-                const rest=loadAccepted().filter(x=>x.id!==j.id);
-                saveAccepted(rest);
-                const jobs=loadJobs();
-                jobs.unshift({...j,postedAt:Date.now()});
-                saveJobs(jobs);
-                renderAccepted();
-              }
-            }
-          });
-          listEl.appendChild(card);
-        });
-      }
-      renderAccepted();
-      return;
-    }
-    // === MY POSTED JOBS PAGE ===
-if (path === 'myjobs.html') {
-  const listEl = document.getElementById('myJobsList');
-  const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
-  const allJobs = loadJobs();
-  const acceptedJobs = loadAccepted();
+      const mine = allJobs.filter(j => j.poster === logged);
+      listEl.innerHTML = '';
 
-  // Filter jobs posted by current user
-  const myJobs = allJobs.filter(j => j.poster === loggedInUser);
-
-  listEl.innerHTML = '';
-
-  if (!myJobs.length) {
-    const msg = document.createElement('p');
-    msg.className = 'muted';
-    msg.textContent = 'You have not posted any jobs yet.';
-    listEl.appendChild(msg);
-    return;
-  }
-
-  myJobs.forEach(job => {
-    const card = createJobCard(job, {
-      showContactLink: false,
-      showAcceptBtn: false,
-      showDelete: true,
-      onDelete: function(j) {
-        if (confirm('Delete this posted job?')) {
-          const next = loadJobs().filter(x => x.id !== j.id);
-          saveJobs(next);
-          window.location.reload();
-        }
-      }
-    });
-
-    // Find who accepted it (if anyone)
-    const accepted = acceptedJobs.find(a => a.id === job.id);
-    const status = document.createElement('p');
-    status.className = 'muted';
-
-    if (accepted && accepted.acceptedBy) {
-      status.innerHTML = `Accepted by: <strong>${accepted.acceptedBy}</strong> `;
-      const chatBtn = document.createElement('a');
-      chatBtn.textContent = 'Chat';
-      chatBtn.className = 'btn btn-primary';
-      chatBtn.href = `chat.html?job=${encodeURIComponent(job.id)}`;
-      status.appendChild(chatBtn);
-    } else {
-      status.textContent = 'No one has accepted this job yet.';
-    }
-
-    card.appendChild(status);
-    listEl.appendChild(card);
-  });
-
-  return;
-}
-
-
-    // === CHAT PAGE ===
-    if (path === 'chat.html') {
-      const params = new URLSearchParams(window.location.search);
-      const jobId = params.get('job');
-      const jobTitle = document.getElementById('jobTitle');
-      const acceptedBy = document.getElementById('acceptedBy');
-      const chatBox = document.getElementById('chatBox');
-      const chatForm = document.getElementById('chatForm');
-      const chatInput = document.getElementById('chatInput');
-      const loggedInUser = localStorage.getItem('LocalWorkHub_loggedIn');
-
-      const allAccepted = loadAccepted();
-      const job = allAccepted.find(j => j.id === jobId);
-      if (!job){
-        document.getElementById('jobInfo').innerHTML = '<p>No chat found for this job.</p>';
-        chatForm.style.display='none';
+      if (!mine.length) {
+        const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'You have not posted any jobs yet.'; listEl.appendChild(p);
         return;
       }
 
-      jobTitle.textContent = job.title;
-      acceptedBy.textContent = job.acceptedBy || 'Unknown';
+      mine.forEach(job=>{
+        const card = createJobCard(job, {
+          showContactLink: false,
+          showAcceptBtn: false,
+          showDelete: true,
+          onDelete: function(j){
+            if (!confirm('Delete this posted job?')) return;
+            const next = loadJobs().filter(x => x.id !== j.id);
+            saveJobs(next);
+            window.location.reload();
+          }
+        });
+
+        const found = accepted.find(a => a.id === job.id);
+        const status = document.createElement('p'); status.className = 'muted';
+        if (found && found.acceptedBy) {
+          status.innerHTML = `Accepted by: <strong>${found.acceptedBy}</strong> `;
+          const chatBtn = document.createElement('a'); chatBtn.textContent = 'Chat'; chatBtn.className = 'btn btn-primary'; chatBtn.href = `chat.html?job=${encodeURIComponent(job.id)}`;
+          status.appendChild(chatBtn);
+        } else {
+          status.textContent = 'No one has accepted this job yet.';
+        }
+        card.appendChild(status);
+        listEl.appendChild(card);
+      });
+      return;
+    }
+
+    // ACCEPTED JOBS PAGE
+    if (path === 'accepted.html') {
+      const listEl = document.getElementById('acceptedList');
+      const logged = localStorage.getItem('LocalWorkHub_loggedIn');
+      listEl.innerHTML = '';
+      const accepted = loadAccepted().filter(j => j.acceptedBy === logged);
+
+      if (!accepted.length) {
+        const p = document.createElement('p'); p.className = 'muted'; p.textContent = "You haven't accepted any jobs yet."; listEl.appendChild(p);
+        return;
+      }
+
+      accepted.forEach(job=>{
+        const card = createJobCard(job, {
+          showContactLink: true,
+          showAcceptBtn: false,
+          showDelete: true,
+          showChat: true,
+          onDelete: function(j){
+            if (!confirm('Remove from accepted list and return to Browse?')) return;
+            const rest = loadAccepted().filter(x => x.id !== j.id);
+            saveAccepted(rest);
+            const jobs = loadJobs();
+            jobs.unshift(Object.assign({}, j, { postedAt: Date.now() }));
+            saveJobs(jobs);
+            window.location.reload();
+          }
+        });
+        listEl.appendChild(card);
+      });
+      return;
+    }
+
+    // CHAT PAGE
+    if (path === 'chat.html') {
+      const params = new URLSearchParams(window.location.search);
+      const jobId = params.get('job');
+      const logged = localStorage.getItem('LocalWorkHub_loggedIn');
+      const jobTitleEl = document.getElementById('jobTitle');
+      const acceptedByEl = document.getElementById('acceptedBy');
+      const chatBox = document.getElementById('chatBox');
+      const chatForm = document.getElementById('chatForm');
+      const chatInput = document.getElementById('chatInput');
+
+      const accepted = loadAccepted();
+      const job = accepted.find(j => j.id === jobId);
+
+      if (!job) {
+        document.getElementById('jobInfo').innerHTML = '<p>No chat available for this job.</p>';
+        if (chatForm) chatForm.style.display = 'none';
+        return;
+      }
+
+      jobTitleEl.textContent = job.title;
+      acceptedByEl.textContent = job.acceptedBy || 'Unknown';
 
       const CHAT_KEY = `chat_${jobId}`;
       let messages = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]');
 
       function renderChat(){
-        chatBox.innerHTML='';
+        chatBox.innerHTML = '';
         messages.forEach(m=>{
-          const msg = document.createElement('p');
-          msg.innerHTML = `<strong>${m.sender}:</strong> ${m.text}`;
-          chatBox.appendChild(msg);
+          const div = document.createElement('div');
+          div.style.marginBottom = '8px';
+          div.innerHTML = `<strong style="color:var(--accent)">${m.sender}</strong>: <span style="color:var(--text)">${m.text}</span>`;
+          chatBox.appendChild(div);
         });
         chatBox.scrollTop = chatBox.scrollHeight;
       }
       renderChat();
 
-      chatForm.addEventListener('submit', e=>{
-        e.preventDefault();
-        const text = chatInput.value.trim();
-        if(!text) return;
-        const msgObj = {sender: loggedInUser, text, time: Date.now()};
-        messages.push(msgObj);
-        localStorage.setItem(CHAT_KEY, JSON.stringify(messages));
-        chatInput.value='';
-        renderChat();
-      });
+      if (chatForm) {
+        chatForm.addEventListener('submit', e=>{
+          e.preventDefault();
+          const text = chatInput.value.trim();
+          if (!text) return;
+          const msg = { sender: logged || 'Guest', text, time: Date.now() };
+          messages.push(msg);
+          localStorage.setItem(CHAT_KEY, JSON.stringify(messages));
+          chatInput.value = '';
+          renderChat();
+        });
+      }
       return;
     }
 
-  });
+  }); // DOMContentLoaded end
 
-})();
+})(); // IIFE end

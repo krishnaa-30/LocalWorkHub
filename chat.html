@@ -8,36 +8,37 @@
 </head>
 <body>
   <header class="site-header">
-    <div class="container">
-      <h1 class="logo">Local WorkHub</h1>
-      <nav>
-        <a href="index.html">Home</a>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;padding:20px 0;">
+      <h1 class="logo" style="color:#3b82f6;font-size:1.8rem;">Local <span style="color:#facc15;">WorkHub</span></h1>
+      <nav style="display:flex;gap:20px;">
+        <a href="index.html" class="active">Home</a>
         <a href="browse.html">Browse Jobs</a>
         <a href="post.html">Post a Job</a>
+        <a href="myjobs.html">My Posted Jobs</a>
         <a href="accepted.html">My Accepted Jobs</a>
-        <a href="chat.html" class="active">Chat</a>
+        <a href="login.html">Login</a>
       </nav>
     </div>
   </header>
 
-  <main class="container">
-    <h2>Chat with Worker</h2>
+  <main class="container" style="max-width:900px;margin:28px auto;">
+    <h2 style="color:var(--text); text-align:center; margin-bottom:18px;">Chat</h2>
 
-    <div id="jobInfo" class="card" style="margin-bottom:16px;">
+    <div id="jobInfo" class="card" style="margin-bottom:12px;">
       <p><strong>Job:</strong> <span id="jobTitle">—</span></p>
       <p><strong>Accepted by:</strong> <span id="acceptedBy">—</span></p>
     </div>
 
-    <div id="chatBox" class="card" style="height:400px; overflow-y:auto; margin-bottom:10px;"></div>
+    <div id="chatBox" class="card" style="height:360px; overflow-y:auto; margin-bottom:12px;"></div>
 
     <form id="chatForm" class="card" style="display:flex; gap:8px;">
-      <input id="chatInput" placeholder="Type your message..." required style="flex:1; padding:10px; border-radius:10px; border:none; background:rgba(255,255,255,0.06); color:white;">
+      <input id="chatInput" placeholder="Type your message..." required style="flex:1; padding:10px; border-radius:10px; border:none; background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008)); color:var(--text);">
       <button type="submit" class="btn btn-primary">Send</button>
     </form>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">© 2025 Local WorkHub</div>
+  <footer>
+    <p>© 2025 Local WorkHub • Designed by <strong> TEAM $ R3</strong></p>
   </footer>
 
   <script src="app.js" defer></script>

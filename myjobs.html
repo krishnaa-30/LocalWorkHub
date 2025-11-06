@@ -2,31 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Local WorkHub — My Posted Jobs</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <header class="site-header">
-    <div class="container">
-      <h1 class="logo">Local WorkHub</h1>
-      <nav>
-        <a href="index.html">Home</a>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;padding:20px 0;">
+      <h1 class="logo" style="color:#3b82f6;font-size:1.8rem;">Local <span style="color:#facc15;">WorkHub</span></h1>
+      <nav style="display:flex;gap:20px;">
+        <a href="index.html" class="active">Home</a>
         <a href="browse.html">Browse Jobs</a>
         <a href="post.html">Post a Job</a>
+        <a href="myjobs.html">My Posted Jobs</a>
         <a href="accepted.html">My Accepted Jobs</a>
-        <a href="myjobs.html" class="active">My Posted Jobs</a>
+        <a href="login.html">Login</a>
       </nav>
     </div>
   </header>
 
-  <main class="container">
-    <h2>My Posted Jobs</h2>
-    <div id="myJobsList"></div>
+  <main class="container" style="max-width:900px;margin:28px auto;">
+    <h2 style="color:var(--text); text-align:center; margin-bottom:18px;">Jobs You Posted</h2>
+    <div id="myJobsList" class="job-list"></div>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">© 2025 Local WorkHub</div>
+  <footer>
+    <p>© 2025 Local WorkHub • Designed by <strong> TEAM $ R3</strong></p>
   </footer>
 
   <script src="app.js" defer></script>
