@@ -3,133 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login - Localwork Hub</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      background-color: #f4f6f8;
-    }
-
-    header {
-      background-color: #28a745;
-      color: white;
-      padding: 30px 20px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-    }
-
-    header p {
-      margin-top: 8px;
-      font-size: 1rem;
-    }
-
-    main {
-      padding: 40px 30px;
-      max-width: 420px;
-      margin: 40px auto;
-      background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    h2 {
-      color: #28a745;
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-
-    label {
-      margin-top: 15px;
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    input {
-      padding: 10px;
-      margin-top: 6px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-
-    button {
-      margin-top: 25px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 12px;
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #218838;
-    }
-
-    .links {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.95rem;
-    }
-
-    .links a {
-      color: #28a745;
-      text-decoration: none;
-      margin: 0 8px;
-    }
-
-    .links a:hover {
-      text-decoration: underline;
-    }
-
-    footer {
-      margin-top: 60px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: #777;
-    }
-  </style>
+  <title>Login - Local WorkHub</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<header>
-  <h1>Localwork Hub</h1>
-  <p>Find and book trusted local workers easily</p>
+<header class="site-header">
+  <div class="container">
+    <h1 class="logo">Local WorkHub</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="browse.html">Browse</a>
+      <a href="post.html">Post</a>
+    </nav>
+  </div>
 </header>
 
-<main>
-  <h2>Login</h2>
-  <form action="book.html" method="get">
-    <label for="username">Username or Email:</label>
-    <input type="text" id="username" name="username" required>
+<main class="container" style="max-width:420px; margin-top:36px;">
+  <div class="card">
+    <h2 style="margin:0 0 8px; color:var(--text);">Login</h2>
+    <p style="margin:0 0 16px; color:var(--muted)">Sign in to manage your posts and accepted jobs.</p>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
+    <form action="browse.html" method="get">
+      <label style="color:var(--muted); font-weight:700;">Username or Email:</label>
+      <input type="text" id="username" name="username" required>
 
-    <button type="submit">Login</button>
-  </form>
+      <label style="margin-top:10px; color:var(--muted); font-weight:700;">Password:</label>
+      <input type="password" id="password" name="password" required>
 
-  <div class="links">
-    <p><a href="#">Forgot Password?</a> | <a href="#">Sign Up</a></p>
+      <div style="margin-top:16px; display:flex; gap:10px; align-items:center;">
+        <button type="submit" class="btn btn-primary">Login</button>
+        <a class="btn btn-outline" href="post.html">Sign Up</a>
+      </div>
+
+      <div class="muted" style="margin-top:12px; font-size:13px;">
+        <a href="#" style="color:var(--muted); text-decoration:underline;">Forgot Password?</a>
+      </div>
+    </form>
   </div>
 </main>
 
-<footer>
-  © 2025 HireLocalPro. All rights reserved.
-</footer>
-
-</body>
-</html>
+<footer class="site-footer">
+  <div class="container">© 2025 Local Wor

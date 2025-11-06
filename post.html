@@ -13,7 +13,7 @@
       <nav>
         <a href="index.html">Home</a>
         <a href="browse.html">Browse Jobs</a>
-        <a href="post.html">Post a Job</a>
+        <a href="post.html" class="active">Post a Job</a>
         <a href="accepted.html">My Accepted Jobs</a>
       </nav>
     </div>
@@ -22,9 +22,9 @@
   <main class="container">
     <h2>Post a Job</h2>
 
-    <form id="postForm" class="card">
+    <form id="postForm" class="card job-form">
       <label>Title
-        <input name="title" required />
+        <input name="title" placeholder="e.g., Delivery Helper" required />
       </label>
 
       <label>Category
@@ -32,7 +32,7 @@
       </label>
 
       <label>Pay (₹)
-        <input name="pay" type="number" min="0" />
+        <input name="pay" type="number" min="0" placeholder="e.g., 500" />
       </label>
 
       <label>Location
@@ -40,11 +40,11 @@
       </label>
 
       <label>Description
-        <textarea name="description" rows="4"></textarea>
+        <textarea name="description" rows="4" placeholder="Describe the job responsibilities..."></textarea>
       </label>
 
       <label>Contact (email or phone)
-        <input name="contact" />
+        <input name="contact" placeholder="example@email.com or +91-9999999999" />
       </label>
 
       <div class="form-actions">
@@ -57,7 +57,7 @@
   </main>
 
   <footer class="site-footer">
-    <div class="container">Local WorkHub — front-end prototype</div>
+    <div class="container">© 2025 Local WorkHub — Connecting local talent with local opportunities</div>
   </footer>
 
   <script src="app.js" defer></script>

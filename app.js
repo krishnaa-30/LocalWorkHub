@@ -1,4 +1,4 @@
-// app.js - shared by all pages
+// app.js - shared by all pages (updated: dark-mode + delete/unaccept)
 (function(){
   const LS_KEY = 'localworkhub_jobs_v1';
   const LS_ACCEPTED_KEY = 'localworkhub_accepted_v1';
@@ -49,7 +49,7 @@
 
   // Utility to create job card element (used on browse and accepted pages)
   function createJobCard(job, opts = {}) {
-    // opts: { onAccept, showAcceptBtn (bool), showContactLink (bool) }
+    // opts: { onAccept, showAcceptBtn (bool), showContactLink (bool), showDelete (bool), onDelete }
     const wrap = document.createElement('div');
     wrap.className = 'job-card';
 
@@ -70,16 +70,13 @@
     left.appendChild(contact);
 
     const right = document.createElement('div');
-    right.style.display = 'flex';
-    right.style.flexDirection = 'column';
-    right.style.gap = '8px';
-    right.style.alignItems = 'flex-end';
+    right.className = 'job-actions';
 
     if (opts.showContactLink && job.contact) {
       const mail = document.createElement('a');
       mail.href = `mailto:${job.contact}`;
       mail.textContent = 'Contact';
-      mail.className = 'btn btn-outline';
+      mail.className = 'btn btn-contact';
       mail.style.padding = '6px 8px';
       right.appendChild(mail);
     }
@@ -87,11 +84,22 @@
     if (opts.showAcceptBtn) {
       const btn = document.createElement('button');
       btn.textContent = 'Accept Job';
-      btn.className = 'btn btn-primary';
+      btn.className = 'btn btn-accept';
       btn.onclick = function(){
         if (opts.onAccept) opts.onAccept(job);
       };
       right.appendChild(btn);
+    }
+
+    // Delete button (when allowed)
+    if (opts.showDelete) {
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      del.className = 'btn btn-delete';
+      del.onclick = function(){
+        if (opts.onDelete) opts.onDelete(job);
+      };
+      right.appendChild(del);
     }
 
     wrap.appendChild(left);
@@ -103,8 +111,14 @@
   document.addEventListener('DOMContentLoaded', function(){
     const path = window.location.pathname.split('/').pop() || 'index.html';
 
+    // mark active nav link (if exists)
+    document.querySelectorAll('.site-header nav a').forEach(a=>{
+      const href = a.getAttribute('href') || '';
+      if (href === path || (href === 'index.html' && path === '')) a.classList.add('active');
+    });
+
     if (path === '' || path === 'index.html') {
-      // nothing dynamic needed on home for now
+      // home page - nothing dynamic
       return;
     }
 
@@ -169,8 +183,8 @@
             const card = createJobCard(job, {
               showAcceptBtn: true,
               showContactLink: true,
+              showDelete: true,
               onAccept: function(j){
-                // accept job
                 const accepted = loadAccepted();
                 accepted.unshift(Object.assign({}, j, { acceptedAt: Date.now() }));
                 saveAccepted(accepted);
@@ -179,6 +193,14 @@
                 saveJobs(jobsLeft);
                 render(); // refresh list
                 alert('You accepted: ' + j.title);
+              },
+              onDelete: function(j){
+                const ok = confirm('Delete this job permanently?');
+                if(!ok) return;
+                const next = loadJobs().filter(x => x.id !== j.id);
+                saveJobs(next);
+                render();
+                alert('Job deleted.');
               }
             });
             listEl.appendChild(card);
@@ -204,7 +226,23 @@
           return;
         }
         accepted.forEach(job => {
-          const card = createJobCard(job, { showContactLink:true, showAcceptBtn:false });
+          const card = createJobCard(job, {
+            showContactLink:true,
+            showAcceptBtn:false,
+            showDelete:true,
+            onDelete: function(j){
+              // un-accept (move back to jobs list)
+              const ok = confirm('Remove from accepted list and return to jobs?');
+              if (!ok) return;
+              const acceptedNow = loadAccepted().filter(x => x.id !== j.id);
+              saveAccepted(acceptedNow);
+              const jobs = loadJobs();
+              jobs.unshift(Object.assign({}, j, { postedAt: Date.now() }));
+              saveJobs(jobs);
+              renderAccepted();
+              alert('Job moved back to Browse.');
+            }
+          });
           const acceptedAt = document.createElement('div'); acceptedAt.className = 'muted';
           acceptedAt.textContent = 'Accepted at: ' + formatDate(job.acceptedAt || job.postedAt || Date.now());
           card.appendChild(acceptedAt);
