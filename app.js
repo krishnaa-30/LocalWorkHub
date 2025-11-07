@@ -3,7 +3,17 @@
   const LS_KEY = 'localworkhub_jobs_v1';
   const LS_ACCEPTED_KEY = 'localworkhub_accepted_v1';
 
-  function sampleJobs(){ return []; }
+  function sampleJobs() {
+  return [
+    { id:'job1', title:'Home Cleaning Helper', category:'Cleaning', pay:500, location:'Aziznagar', description:'Need someone to clean 2BHK flat and wash balcony.', contact:'clean@local.com', poster:'demoUser', postedAt:Date.now()-500000 },
+    { id:'job2', title:'Math Tutor (Grade 8)', category:'Tutoring', pay:600, location:'Shankarpally', description:'Looking for an experienced tutor for 8th-grade math.', contact:'teach@local.com', poster:'demoUser', postedAt:Date.now()-400000 },
+    { id:'job3', title:'Food Delivery Rider', category:'Delivery', pay:600, location:'Vikarabad', description:'Deliver restaurant food orders using a bike.', contact:'rider@local.com', poster:'demoUser', postedAt:Date.now()-300000 },
+    { id:'job4', title:'Painter Needed', category:'Construction', pay:1200, location:'Vikarabad', description:'Paint small 1BHK house interior walls.', contact:'paint@local.com', poster:'demoUser', postedAt:Date.now()-150000 },
+    { id:'job5', title:'Garden Maintainer', category:'Gardening', pay:500, location:'Shankarpally', description:'Trim plants and water garden once a week.', contact:'garden@local.com', poster:'demoUser', postedAt:Date.now()-100000 },
+    { id:'job6', title:'AC Repair Technician', category:'Repair', pay:1000, location:'Vikarabad', description:'Fix and clean split AC unit.', contact:'acfix@local.com', poster:'demoUser', postedAt:Date.now()-50000 }
+  ];
+}
+
 
   function loadJobs(){
     try{ const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : sampleJobs(); }
@@ -93,6 +103,7 @@
     const publicPages = ['login.html','signup.html','index.html'];
 
     // redirect to login if protected page and not logged in
+    
     if (!loggedIn && !publicPages.includes(path)) {
       window.location.href = 'login.html';
       return;
